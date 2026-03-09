@@ -1,0 +1,108 @@
+/* GENERAL PAGE LAYOUT */
+
+body {
+  background-color: #ffe3e3;
+  margin: 0px;
+}
+
+main,
+footer {
+  margin: 0 auto;
+  max-width: 250px;
+  align-content: center;
+  text-align: center;
+}
+
+footer {
+  text-decoration: underline;
+  font-family: monospace;
+  font-style: italic;
+  margin-top: 400px;
+  padding-bottom: 50px;
+}
+
+footer a {
+  color: black;
+  opacity: .6;
+}
+
+/* HEADER */
+
+header {
+  letter-spacing: 3px;
+  background-color: #ffefef;
+  font-family: 'Courgette', sans-serif;
+  width: 100%;
+  overflow: hidden;
+}
+
+#logocontainer {
+  margin: 0 auto;
+  width: 250px;
+  height: 80px;
+  padding-top: 30px;
+  padding-bottom: 20px;
+  align-content: center;
+  text-align: center;
+  position: relative;
+}
+
+#logocontainer img {
+  margin-bottom: -8px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+#logocontainer h1 {
+  margin-top: 10px;
+}
+
+/* FRIENDS LIST */
+
+.printi-friends-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.printi-friends-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.printi-friend-item {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  padding: 20px;
+  font-family: 'Itim', 'Courgette', sans-serif;
+  font-size: 1.2em;
+  color: #3a2c1a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.printi-friend-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.printi-friend-name {
+  font-weight: bold;
+}
+
+.page-title {
+  text-align: center;
+  font-family: 'Itim', 'Courgette', sans-serif;
+  font-size: 2em;
+  color: #3a2c1a;
+  margin-bottom: 30px;
+}
+
+/* RECEIPT STACK (for main consistency) */
+
+#receiptstack {
+  max-width: 1200px;
+  margin: 0 auto;
+}

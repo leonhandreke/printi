@@ -90,7 +90,8 @@ export async function GET(
 
   const filename = `printi-${uuidv4()}.${extension}`;
 
-  return new NextResponse(content, {
+  // Convert to BodyInit type for NextResponse
+  return new NextResponse(content as BodyInit, {
     status: 200,
     headers: {
       "Content-Type": mediaType,

@@ -34,6 +34,7 @@ export async function ditherBytesToBwimage(
     // imgData.data[i + 3] is alpha, leave unchanged
   }
 
-  const outputImgData: ImageData = canvasDither.floydsteinberg(imgData);
+  // @ts-expect-error - canvas-dither types don't match canvas package exactly
+  const outputImgData = canvasDither.floydsteinberg(imgData);
   return imagedataToBwimage(outputImgData);
 }
