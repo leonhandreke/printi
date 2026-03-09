@@ -1,16 +1,19 @@
 import { POST } from "../route";
 import { NextRequest } from "next/server";
-import * as db from "@/lib/db";
-
-// Mock the database module
-jest.mock("@/lib/db", () => ({
-  setupDatabase: jest.fn().mockResolvedValue(undefined),
-  insertMessage: jest.fn().mockResolvedValue(undefined),
-}));
+import { getPool } from "@/lib/db";
 
 describe("/[printerName] POST route", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(async () => {
+    // Clean up test data before each test
+    const pool = getPool();
+    await pool.query("DELETE FROM printi_message WHERE printer_name LIKE 'test%'");
+  });
+
+  afterAll(async () => {
+    // Clean up and close pool after all tests
+    const pool = getPool();
+    await pool.query("DELETE FROM printi_message WHERE printer_name LIKE 'test%'");
+    await pool.end();
   });
 
   it("should accept multipart/form-data file upload and insert into database", async () => {
@@ -34,27 +37,27 @@ describe("/[printerName] POST route", () => {
     const params = Promise.resolve({ printerName: "testprinter" });
     const response = await POST(request, { params });
 
-    // Verify setupDatabase was called
-    expect(db.setupDatabase).toHaveBeenCalledTimes(1);
-
-    // Verify insertMessage was called with correct parameters
-    expect(db.insertMessage).toHaveBeenCalledTimes(1);
-    expect(db.insertMessage).toHaveBeenCalledWith(
-      "testprinter",
-      expect.any(Buffer)
-    );
-
     // Verify response
     expect(response.status).toBe(200);
     const text = await response.text();
     expect(text).toContain("Printi is printing!");
+
+    // Verify data was inserted into database
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT * FROM printi_message WHERE printer_name = $1",
+      ["testprinter"]
+    );
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].printer_name).toBe("testprinter");
+    expect(result.rows[0].image_data).toBeTruthy();
   });
 
   it("should accept JSON payload with base64 images", async () => {
     const testImageBase64 = Buffer.from("fake-image-data").toString("base64");
 
     // Create a mock request with JSON body
-    const request = new NextRequest("http://localhost:3000/myprinter", {
+    const request = new NextRequest("http://localhost:3000/testjson", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -65,18 +68,20 @@ describe("/[printerName] POST route", () => {
     });
 
     // Call the POST handler
-    const params = Promise.resolve({ printerName: "myprinter" });
+    const params = Promise.resolve({ printerName: "testjson" });
     const response = await POST(request, { params });
-
-    // Verify insertMessage was called
-    expect(db.insertMessage).toHaveBeenCalledTimes(1);
-    expect(db.insertMessage).toHaveBeenCalledWith(
-      "myprinter",
-      expect.any(Buffer)
-    );
 
     // Verify response
     expect(response.status).toBe(200);
+
+    // Verify data was inserted into database
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT * FROM printi_message WHERE printer_name = $1",
+      ["testjson"]
+    );
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].image_data.toString()).toBe("fake-image-data");
   });
 
   it("should handle multiple files in form-data", async () => {
@@ -91,17 +96,23 @@ describe("/[printerName] POST route", () => {
     formData.append("file1", file1);
     formData.append("file2", file2);
 
-    const request = new NextRequest("http://localhost:3000/multiprinter", {
+    const request = new NextRequest("http://localhost:3000/testmulti", {
       method: "POST",
       body: formData,
     });
 
-    const params = Promise.resolve({ printerName: "multiprinter" });
+    const params = Promise.resolve({ printerName: "testmulti" });
     const response = await POST(request, { params });
 
-    // Verify insertMessage was called twice
-    expect(db.insertMessage).toHaveBeenCalledTimes(2);
     expect(response.status).toBe(200);
+
+    // Verify both files were inserted into database
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT * FROM printi_message WHERE printer_name = $1",
+      ["testmulti"]
+    );
+    expect(result.rows.length).toBe(2);
   });
 
   it("should reject files larger than MAX_SIZE", async () => {
@@ -114,16 +125,22 @@ describe("/[printerName] POST route", () => {
     const formData = new FormData();
     formData.append("file", largeFile);
 
-    const request = new NextRequest("http://localhost:3000/testprinter", {
+    const request = new NextRequest("http://localhost:3000/testlarge", {
       method: "POST",
       body: formData,
     });
 
-    const params = Promise.resolve({ printerName: "testprinter" });
+    const params = Promise.resolve({ printerName: "testlarge" });
     const response = await POST(request, { params });
 
-    // Verify insertMessage was NOT called
-    expect(db.insertMessage).not.toHaveBeenCalled();
     expect(response.status).toBe(200); // Still returns 200 but doesn't insert
+
+    // Verify nothing was inserted into database
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT * FROM printi_message WHERE printer_name = $1",
+      ["testlarge"]
+    );
+    expect(result.rows.length).toBe(0);
   });
 });
