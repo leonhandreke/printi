@@ -134,10 +134,6 @@ header {
   filter: grayscale(100%);
 }
 
-#formcontainer {
-  overflow-x: hidden;
-}
-
 .printed {
   margin-top: -1000px !important;
 }

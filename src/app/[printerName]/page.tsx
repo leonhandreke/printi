@@ -160,18 +160,13 @@ export default function PrinterPage() {
         <div className="receiptcontainer fadein" id="receiptupload">
           <div className="receiptpadder">
             <div className="receiptbackground">
-              <div id="formcontainer">
-                <form id="leform" action="" method="post" encType="multipart/form-data">
-                  <input
-                    ref={fileInputRef}
-                    id="filepicker"
-                    type="file"
-                    name="theshiz"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                </form>
-              </div>
+              <input
+                ref={fileInputRef}
+                id="filepicker"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
             </div>
           </div>
         </div>
