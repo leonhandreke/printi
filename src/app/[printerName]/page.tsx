@@ -182,8 +182,6 @@ export default function PrinterPage() {
       </footer>
 
       <InstallPrompt printerName={printerName} firstPrintiSent={firstPrintiSent} />
-
-      <script src="https://webrtc.github.io/adapter/adapter-latest.js" async></script>
     </>
   );
 }
