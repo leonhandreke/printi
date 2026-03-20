@@ -104,9 +104,7 @@ header {
     => Transition duration: 1000 / 357.1875 = 2.8 s
   */
   transition: margin 2800ms;
-  -webkit-transition: margin 2800ms;
   transition-timing-function: linear;
-  -webkit-transition-timing-function: linear;
 }
 
 .receiptbackground {
@@ -130,12 +128,10 @@ header {
   max-width: 100%;
   height: auto;
   transition: 500ms filter linear;
-  -webkit-transition: 500ms -webkit-filter linear;
 }
 
 .bwfilter {
   filter: grayscale(100%);
-  -webkit-filter: grayscale(100%);
 }
 
 #formcontainer {
@@ -147,10 +143,7 @@ header {
 }
 
 .wiggler {
-  animation: wiggle 200ms;
-  animation-iteration-count: infinite;
-  -webkit-animation: wiggle 200ms;
-  -webkit-animation-iteration-count: infinite;
+  animation: wiggle 200ms infinite;
 }
 
 @keyframes wiggle {
@@ -202,14 +195,12 @@ header {
   max-height: 0px;
 
   transition: max-height 500ms;
-  -webkit-transition: max-height 500ms;
 }
 
 #printicambuttoncontainer {
   height: 0px;
 
   transition: height 500ms;
-  -webkit-transition: height 500ms;
 }
 
 .showcamera {
