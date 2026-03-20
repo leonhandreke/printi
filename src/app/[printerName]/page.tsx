@@ -3,23 +3,19 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import './printer.css';
+import Header from './Header';
 
 export default function PrinterPage() {
   const params = useParams();
   const printerName = (params.printerName as string) || 'printi';
 
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const receiptStackRef = useRef<HTMLDivElement>(null);
   const receiptPrototypeRef = useRef<HTMLDivElement>(null);
 
-  const [cameraConnected, setCameraConnected] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-  const [showPrintiCamButton, setShowPrintiCamButton] = useState(false);
   const [firstPrintiSent, setFirstPrintiSent] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
-  const streamRef = useRef<MediaStream | null>(null);
   const deferredPromptRef = useRef<any>(null);
 
   const PAGEWIDTH = printerName === 'printi' ? 576 : 384;
@@ -131,7 +127,7 @@ export default function PrinterPage() {
       }, 1000);
     };
 
-    xhr.open('POST', new URL(`submitimages/${printerName}`, api_server).toString(), true);
+    xhr.open('POST', new URL(`api/${printerName}`, api_server).toString(), true);
 
     const ua = window.navigator.userAgent;
     const ie = (ua.indexOf('MSIE ') + ua.indexOf('Trident/') + ua.indexOf('Edge/') > -3);
@@ -192,53 +188,9 @@ export default function PrinterPage() {
     }
   };
 
-  // Logo click handler
-  const handleLogoClick = () => {
-    if (cameraConnected) {
-      if (showCamera) {
-        setTimeout(() => {
-          if (streamRef.current) {
-            streamRef.current.getTracks()[0].stop();
-          }
-          setCameraConnected(false);
-          if (videoRef.current) {
-            videoRef.current.srcObject = null;
-          }
-        }, 500);
-      }
-      setShowCamera(!showCamera);
-    } else {
-      setShowPrintiCamButton(!showPrintiCamButton);
-    }
-  };
-
-  // Printi cam button click handler
-  const handlePrintiCamClick = () => {
-    navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: 'environment',
-      },
-    }).then((stream) => {
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setCameraConnected(true);
-      setShowPrintiCamButton(false);
-      setShowCamera(true);
-    }).catch((error) => {
-      console.error(error);
-      setCameraConnected(false);
-    });
-  };
-
-  // Camera container click (take picture)
-  const handleCameraClick = () => {
-    if (videoRef.current) {
-      uploadImage(null, videoRef.current);
-    }
+  // Handle camera capture from Header
+  const handleCapture = (video: HTMLVideoElement) => {
+    uploadImage(null, video);
   };
 
   // Setup effects
@@ -287,21 +239,6 @@ export default function PrinterPage() {
     // Drag handlers
     const handleDragOver = (e: DragEvent) => e.preventDefault();
 
-    // Visibility change handler
-    const handleVisibilityChange = () => {
-      if (cameraConnected && document.visibilityState !== 'visible') {
-        if (streamRef.current) {
-          streamRef.current.getTracks()[0].stop();
-        }
-        setCameraConnected(false);
-        if (videoRef.current) {
-          videoRef.current.srcObject = null;
-        }
-        setShowPrintiCamButton(true);
-        setShowCamera(false);
-      }
-    };
-
     // PWA install prompt handler
     const handleBeforeInstallPrompt = (e: Event) => {
       if (!/android/i.test(navigator.userAgent)) return;
@@ -314,7 +251,6 @@ export default function PrinterPage() {
     document.body.addEventListener('drop', handleDrop);
     document.body.addEventListener('dragenter', handleDragOver);
     document.body.addEventListener('dragover', handleDragOver);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     return () => {
@@ -322,10 +258,9 @@ export default function PrinterPage() {
       document.body.removeEventListener('drop', handleDrop);
       document.body.removeEventListener('dragenter', handleDragOver);
       document.body.removeEventListener('dragover', handleDragOver);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, [cameraConnected]);
+  }, []);
 
   const handleInstallClick = () => {
     if (deferredPromptRef.current) {
@@ -337,35 +272,7 @@ export default function PrinterPage() {
 
   return (
     <>
-      <header>
-        <div id="logocontainer" onClick={handleLogoClick}>
-          <h1>
-            <img src="/printi_logo_transparent.svg" width="100" height="34" alt="printi" title="printi" />
-            <span id="printernametitle">/{printerName}</span>
-          </h1>
-        </div>
-        <div
-          id="cameracontainer"
-          className={`titlesecret ${showCamera ? 'showcamera' : ''}`}
-          onClick={handleCameraClick}
-        >
-          <div id="videoscreen">
-            <video ref={videoRef} playsInline autoPlay muted></video>
-          </div>
-        </div>
-        <div
-          id="printicambuttoncontainer"
-          className={`titlesecret ${showPrintiCamButton ? 'showprinticambutton' : ''}`}
-          onClick={handlePrintiCamClick}
-        >
-          <div className="printicamrotator" style={{ width: '8.4ex', transform: 'rotate(-15deg) translate(-17px, 12px)' }}>
-            <div className="printicamtext" style={{ animationDuration: '3000ms' }}>printiprintiprintiprinti</div>
-          </div>
-          <div className="printicamrotator" style={{ width: '4.2ex', transform: 'rotate(-15deg) translate(23px, 7px)' }}>
-            <div className="printicamtext">camcamcamcam</div>
-          </div>
-        </div>
-      </header>
+      <Header printerName={printerName} onCapture={handleCapture} />
 
       <main id="receiptstack" ref={receiptStackRef}>
         <span style={{ display: 'none' }} ref={receiptPrototypeRef}>
