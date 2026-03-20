@@ -30,7 +30,7 @@ export default function Receipt({ receipt }: ReceiptProps) {
                 alt=""
               />
             )}
-            <div id="curtain" style={{ width: receipt.curtainWidth + '%' }}></div>
+            <div className="curtain" style={{ width: receipt.curtainWidth + '%' }}></div>
           </div>
         </div>
       </div>

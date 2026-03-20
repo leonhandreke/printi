@@ -114,7 +114,7 @@ header {
   position: relative;
 }
 
-#curtain {
+.curtain {
   transition: 200ms linear left;
   position: absolute;
   right: 0px;
