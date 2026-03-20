@@ -168,16 +168,6 @@ header {
   }
 }
 
-#logje {
-  text-align: left;
-  font-family: monospace;
-}
-
-#logje p::before {
-  content: "> ";
-  opacity: .5;
-}
-
 /* PRINTI CAM */
 
 .titlesecret {
@@ -246,20 +236,6 @@ header {
 video {
   width: 226px;
   pointer-events: none;
-}
-
-.takepicture {
-  animation: pictureflash 200ms linear;
-}
-
-@keyframes pictureflash {
-  0% {
-    filter: grayscale(1.0) contrast(2.0);
-  }
-
-  100% {
-    filter: grayscale(0.0) contrast(1.0);
-  }
 }
 
 /* PWA INSTALL BOX */
