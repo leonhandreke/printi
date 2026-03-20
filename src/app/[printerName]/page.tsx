@@ -89,7 +89,7 @@ export default function PrinterPage() {
     // Clone receipt element
     if (!receiptPrototypeRef.current || !receiptStackRef.current) return;
     const receiptEl = receiptPrototypeRef.current.cloneNode(true) as HTMLDivElement;
-    receiptStackRef.current.insertBefore(receiptEl, receiptPrototypeRef.current.parentElement);
+    receiptStackRef.current.insertBefore(receiptEl, receiptPrototypeRef.current);
 
     const xhr = new XMLHttpRequest();
 
