@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 
 interface HeaderProps {
@@ -68,7 +69,7 @@ export default function Header({ printerName, onCapture }: HeaderProps) {
     <header>
       <div id="logocontainer" onClick={handleLogoClick}>
         <h1>
-          <img src="/printi_logo_transparent.svg" width="100" height="34" alt="printi" title="printi" />
+          <Image src="/printi_logo_transparent.svg" width={100} height={34} alt="printi" title="printi" />
           <span id="printernametitle">/{printerName}</span>
         </h1>
       </div>
