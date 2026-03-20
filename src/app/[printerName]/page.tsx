@@ -1,26 +1,27 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './printer.css';
 import Header from './Header';
 import InstallPrompt from './InstallPrompt';
+import Receipt, { ReceiptState } from './Receipt';
+
+let nextReceiptId = 0;
 
 export default function PrinterPage() {
   const params = useParams();
   const printerName = (params.printerName as string) || 'printi';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const receiptStackRef = useRef<HTMLDivElement>(null);
-  const receiptPrototypeRef = useRef<HTMLDivElement>(null);
 
+  const [receipts, setReceipts] = useState<ReceiptState[]>([]);
   const [firstPrintiSent, setFirstPrintiSent] = useState(false);
 
   const PAGEWIDTH = printerName === 'printi' ? 576 : 384;
 
   // Set manifest link dynamically
   useEffect(() => {
-    // Update manifest link
     let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
     if (!manifestLink) {
       manifestLink = document.createElement('link');
@@ -69,8 +70,16 @@ export default function PrinterPage() {
     };
   };
 
+  const updateReceipt = (id: string, updates: Partial<ReceiptState>) => {
+    setReceipts(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const removeReceipt = (id: string) => {
+    setReceipts(prev => prev.filter(r => r.id !== id));
+  };
+
   // Upload image function
-  const uploadImage = (fileSource: File | null, videoSource: HTMLVideoElement | null) => {
+  const uploadImage = useCallback((fileSource: File | null, videoSource: HTMLVideoElement | null) => {
     const api_server = window.location.origin + '/';
 
     // Add printi name to localStorage
@@ -80,46 +89,41 @@ export default function PrinterPage() {
       localStorage.setItem('printiFriends', JSON.stringify(printiFriends));
     }
 
-    // Clone receipt element
-    if (!receiptPrototypeRef.current || !receiptStackRef.current) return;
-    const receiptEl = receiptPrototypeRef.current.cloneNode(true) as HTMLDivElement;
-    receiptStackRef.current.insertBefore(receiptEl, receiptPrototypeRef.current);
+    // Create receipt in state
+    const id = String(nextReceiptId++);
+    const newReceipt: ReceiptState = {
+      id,
+      previewSrc: null,
+      filename: null,
+      curtainWidth: 100,
+      wiggling: false,
+      bwFilter: false,
+      printed: false,
+    };
+    setReceipts(prev => [...prev, newReceipt]);
 
     const xhr = new XMLHttpRequest();
 
     // Progress handler
     xhr.upload.onprogress = (e) => {
       const reverseprogress = ((e.total - e.loaded) / e.total) * 100;
-      const curtain = receiptEl.querySelector('#curtain') as HTMLDivElement;
-      if (curtain) {
-        curtain.style.width = reverseprogress + '%';
-      }
-      if (reverseprogress < 5 && !receiptEl.classList.contains('wiggler')) {
-        receiptEl.classList.add('wiggler');
+      updateReceipt(id, {
+        curtainWidth: reverseprogress,
+        wiggling: reverseprogress < 5 ? true : undefined,
+      });
+      if (reverseprogress < 5) {
+        updateReceipt(id, { wiggling: true });
       }
     };
 
     // Load handler
     xhr.onload = () => {
-      const curtain = receiptEl.querySelector('#curtain') as HTMLDivElement;
-      if (curtain) {
-        curtain.style.width = '0%';
-      }
-      const previewImg = receiptEl.querySelector('.previewimg') as HTMLImageElement;
-      if (previewImg) {
-        previewImg.classList.add('bwfilter');
-      }
+      updateReceipt(id, { curtainWidth: 0, bwFilter: true });
 
       setTimeout(() => {
-        receiptEl.classList.remove('wiggler');
-        const padder = receiptEl.querySelector('.receiptpadder') as HTMLDivElement;
-        if (padder) {
-          padder.classList.add('printed');
-        }
+        updateReceipt(id, { wiggling: false, printed: true });
         setTimeout(() => {
-          if (receiptStackRef.current) {
-            receiptStackRef.current.removeChild(receiptEl);
-          }
+          removeReceipt(id);
           setFirstPrintiSent(true);
         }, 2000);
       }, 1000);
@@ -137,43 +141,31 @@ export default function PrinterPage() {
 
       if (videoSource !== null) {
         const result = sourceToDataUri(videoSource, videoSource.videoWidth, videoSource.videoHeight);
-        const previewImg = receiptEl.querySelector('.previewimg') as HTMLImageElement;
-        if (previewImg) {
-          previewImg.src = result.dataURL;
-        }
+        updateReceipt(id, { previewSrc: result.dataURL });
         xhr.send(JSON.stringify({ images: [result.base64data] }));
       } else if (fileSource) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const previewImg = receiptEl.querySelector('.previewimg') as HTMLImageElement;
-          if (previewImg && e.target) {
-            previewImg.src = e.target.result as string;
-          }
+          const dataUrl = e.target?.result as string;
+          updateReceipt(id, { previewSrc: dataUrl });
 
           const immie = document.createElement('img');
           immie.onload = () => {
             const result = sourceToDataUri(immie, immie.width, immie.height);
             xhr.send(JSON.stringify({ images: [result.base64data] }));
           };
-          immie.src = e.target?.result as string;
+          immie.src = dataUrl;
         };
         reader.readAsDataURL(fileSource);
       }
     } else if (fileSource) {
-      const previewEl = receiptEl.querySelector('.preview') as HTMLDivElement;
-      const filenameP = document.createElement('p');
-      filenameP.innerText = fileSource.name;
-      const previewImg = previewEl.querySelector('img');
-      if (previewImg) {
-        previewImg.parentNode?.removeChild(previewImg);
-      }
-      previewEl.appendChild(filenameP);
+      updateReceipt(id, { filename: fileSource.name });
 
       const data = new FormData();
       data.append('file0', fileSource);
       xhr.send(data);
     }
-  };
+  }, [printerName, PAGEWIDTH]);
 
   // File picker change handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,7 +173,6 @@ export default function PrinterPage() {
       for (let i = 0; i < e.target.files.length; i++) {
         uploadImage(e.target.files[i], null);
       }
-      // Reset the input
       e.target.value = '';
     }
   };
@@ -191,9 +182,8 @@ export default function PrinterPage() {
     uploadImage(null, video);
   };
 
-  // Setup effects
+  // Paste and drop handlers
   useEffect(() => {
-    // Paste handler
     const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData) {
         const items = e.clipboardData.items;
@@ -215,7 +205,6 @@ export default function PrinterPage() {
       }
     };
 
-    // Drop handler
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       if (e.dataTransfer?.items) {
@@ -234,7 +223,6 @@ export default function PrinterPage() {
       }
     };
 
-    // Drag handlers
     const handleDragOver = (e: DragEvent) => e.preventDefault();
 
     document.addEventListener('paste', handlePaste);
@@ -248,25 +236,16 @@ export default function PrinterPage() {
       document.body.removeEventListener('dragenter', handleDragOver);
       document.body.removeEventListener('dragover', handleDragOver);
     };
-  }, []);
+  }, [uploadImage]);
 
   return (
     <>
       <Header printerName={printerName} onCapture={handleCapture} />
 
-      <main id="receiptstack" ref={receiptStackRef}>
-        <span style={{ display: 'none' }} ref={receiptPrototypeRef}>
-          <div className="receiptcontainer">
-            <div className="receiptpadder">
-              <div className="receiptbackground">
-                <div className="preview">
-                  <img className="previewimg" src="#" width="250" alt="" />
-                  <div id="curtain"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </span>
+      <main id="receiptstack">
+        {receipts.map(receipt => (
+          <Receipt key={receipt.id} receipt={receipt} />
+        ))}
 
         <div className="receiptcontainer fadein" id="receiptupload">
           <div className="receiptpadder">
