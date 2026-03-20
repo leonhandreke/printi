@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import './printer.css';
 import Header from './Header';
+import InstallPrompt from './InstallPrompt';
 
 export default function PrinterPage() {
   const params = useParams();
@@ -14,9 +15,6 @@ export default function PrinterPage() {
   const receiptPrototypeRef = useRef<HTMLDivElement>(null);
 
   const [firstPrintiSent, setFirstPrintiSent] = useState(false);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-
-  const deferredPromptRef = useRef<any>(null);
 
   const PAGEWIDTH = printerName === 'printi' ? 576 : 384;
 
@@ -239,36 +237,18 @@ export default function PrinterPage() {
     // Drag handlers
     const handleDragOver = (e: DragEvent) => e.preventDefault();
 
-    // PWA install prompt handler
-    const handleBeforeInstallPrompt = (e: Event) => {
-      if (!/android/i.test(navigator.userAgent)) return;
-      e.preventDefault();
-      deferredPromptRef.current = e;
-      setShowInstallPrompt(true);
-    };
-
     document.addEventListener('paste', handlePaste);
     document.body.addEventListener('drop', handleDrop);
     document.body.addEventListener('dragenter', handleDragOver);
     document.body.addEventListener('dragover', handleDragOver);
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     return () => {
       document.removeEventListener('paste', handlePaste);
       document.body.removeEventListener('drop', handleDrop);
       document.body.removeEventListener('dragenter', handleDragOver);
       document.body.removeEventListener('dragover', handleDragOver);
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
-
-  const handleInstallClick = () => {
-    if (deferredPromptRef.current) {
-      deferredPromptRef.current.prompt();
-      deferredPromptRef.current = null;
-    }
-    setShowInstallPrompt(false);
-  };
 
   return (
     <>
@@ -312,18 +292,7 @@ export default function PrinterPage() {
         <a href="https://github.com/fons-/printi/blob/master/README.md" rel="help">What is printi?</a>
       </footer>
 
-      {showInstallPrompt && firstPrintiSent && (
-        <div id="pwa-installable">
-          <div id="first-printi-sent">
-            <div id="install-box">
-              <p>
-                Do you want to install <span style={{ fontStyle: 'italic' }}>{printerName}</span> to your phone to easily send photos to your printi friends from other apps?
-              </p>
-              <button onClick={handleInstallClick}>Yes!</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <InstallPrompt printerName={printerName} firstPrintiSent={firstPrintiSent} />
 
       <script src="https://webrtc.github.io/adapter/adapter-latest.js" async></script>
     </>
