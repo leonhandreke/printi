@@ -13,11 +13,9 @@ export async function POST(
   const { printerName } = await params;
 
   const contentType = req.headers.get("content-type") ?? "";
-  let numAdded = 0;
 
   try {
     if (contentType.includes("application/json")) {
-      // Handle JSON payload with base64 images
       const body = await req.json();
       const images: string[] = body.images ?? [];
 
@@ -25,11 +23,9 @@ export async function POST(
         if (imgStr.length < MAX_SIZE) {
           const imageBytes = Buffer.from(imgStr, "base64");
           await insertMessage(printerName, imageBytes);
-          numAdded++;
         }
       }
     } else if (contentType.includes("multipart/form-data")) {
-      // Handle form-data with file uploads
       const formData = await req.formData();
 
       for (const [, value] of formData.entries()) {
@@ -39,7 +35,6 @@ export async function POST(
 
           if (imageBytes.length < MAX_SIZE) {
             await insertMessage(printerName, imageBytes);
-            numAdded++;
           }
         }
       }
@@ -50,14 +45,11 @@ export async function POST(
     console.error(`[upload] Error processing upload:`, err);
   }
 
-  // Return HTML response like the original
   return new NextResponse(
     "<html><body><h1>Printi is printing!</h1><script>setTimeout(() => { window.close() }, 2000)</script></body></html>",
     {
       status: 200,
-      headers: {
-        "Content-Type": "text/html",
-      },
+      headers: { "Content-Type": "text/html" },
     }
   );
 }

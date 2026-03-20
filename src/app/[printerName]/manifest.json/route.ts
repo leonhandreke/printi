@@ -28,7 +28,7 @@ export async function GET(
       },
     ],
     share_target: {
-      action: `/submitimages/${printerName}`,
+      action: `/api/${printerName}`,
       method: 'POST',
       enctype: 'multipart/form-data',
       params: {

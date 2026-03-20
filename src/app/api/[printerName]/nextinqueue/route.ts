@@ -11,12 +11,8 @@ import { printerSize } from "@/lib/printerConfig";
 
 export const runtime = "nodejs";
 
-// Disable body parsing and response buffering for long-polling
 export const dynamic = "force-dynamic";
 
-// Increase the max duration for long-polling (in seconds).
-// Vercel serverless has a 30s limit, but self-hosted has no limit.
-// Set to a high value for self-hosted.
 export const maxDuration = 300;
 
 export async function GET(
@@ -29,20 +25,15 @@ export async function GET(
   const { printerName } = await params;
   const signal = req.signal;
 
-  // Check if a message already exists in the database
   let message = await queryOldestMessage(printerName);
 
   if (!message) {
-    // No message available, wait for a notification.
-    // Loop: wait for notification -> check DB -> if still nothing, wait again.
-    // This handles the case where another concurrent client grabbed the message.
     while (!message) {
       if (signal.aborted) {
         return new NextResponse("Client disconnected", { status: 499 });
       }
 
       try {
-        // Wait for notification or abort
         await waitForNotification(printerName, signal);
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -51,9 +42,7 @@ export async function GET(
         throw err;
       }
 
-      // Notification received, try to grab the message
       message = await queryOldestMessage(printerName);
-      // If null, another client got it via SKIP LOCKED. Loop again.
     }
   }
 
@@ -61,13 +50,11 @@ export async function GET(
     return new NextResponse("Nothing received!", { status: 404 });
   }
 
-  // Dither the image
   const bwimage = await ditherBytesToBwimage(
     Buffer.from(message.image_data),
     printerSize(printerName)
   );
 
-  // Determine output format from Accept header
   const accept = req.headers.get("accept") ?? "*/*";
   const outputPng =
     accept.includes("image/png") ||
@@ -90,7 +77,6 @@ export async function GET(
 
   const filename = `printi-${uuidv4()}.${extension}`;
 
-  // Convert to BodyInit type for NextResponse
   return new NextResponse(content as BodyInit, {
     status: 200,
     headers: {

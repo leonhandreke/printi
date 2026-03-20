@@ -28,7 +28,7 @@ describe("/[printerName] POST route", () => {
     formData.append("file", file);
 
     // Create a mock request
-    const request = new NextRequest("http://localhost:3000/testprinter", {
+    const request = new NextRequest("http://localhost:3000/api/testprinter", {
       method: "POST",
       body: formData,
     });
@@ -57,7 +57,7 @@ describe("/[printerName] POST route", () => {
     const testImageBase64 = Buffer.from("fake-image-data").toString("base64");
 
     // Create a mock request with JSON body
-    const request = new NextRequest("http://localhost:3000/testjson", {
+    const request = new NextRequest("http://localhost:3000/api/testjson", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -96,7 +96,7 @@ describe("/[printerName] POST route", () => {
     formData.append("file1", file1);
     formData.append("file2", file2);
 
-    const request = new NextRequest("http://localhost:3000/testmulti", {
+    const request = new NextRequest("http://localhost:3000/api/testmulti", {
       method: "POST",
       body: formData,
     });
@@ -125,7 +125,7 @@ describe("/[printerName] POST route", () => {
     const formData = new FormData();
     formData.append("file", largeFile);
 
-    const request = new NextRequest("http://localhost:3000/testlarge", {
+    const request = new NextRequest("http://localhost:3000/api/testlarge", {
       method: "POST",
       body: formData,
     });

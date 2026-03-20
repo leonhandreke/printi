@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
+  const url = req.nextUrl.clone();
+  const pathParts = url.pathname.split("/").filter(Boolean);
+
+  // Rewrite POST /:printername → POST /api/:printername
+  // for compatibility with the old fonsp-printi client.
+  if (req.method === "POST" && pathParts.length === 1) {
+    url.pathname = `/api/${pathParts[0]}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // Rewrite GET /nextinqueue/:printername → GET /api/:printername/nextinqueue
+  // for compatibility with the old fonsp-printi printer client.
+  if (
+    req.method === "GET" &&
+    pathParts.length === 2 &&
+    pathParts[0] === "nextinqueue"
+  ) {
+    url.pathname = `/api/${pathParts[1]}/nextinqueue`;
+    return NextResponse.rewrite(url);
+  }
+
   const response = NextResponse.next();
 
   response.headers.set("Access-Control-Allow-Origin", "*");
@@ -22,5 +43,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*", "/nextinqueue/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
