@@ -6,6 +6,7 @@ import './printer.css';
 import Header from './Header';
 import InstallPrompt from './InstallPrompt';
 import Receipt, { ReceiptState } from './Receipt';
+import { loadImage, readFileAsDataURL, savePrintiFriend, sourceToDataUri, uploadToApi } from './upload';
 
 let nextReceiptId = 0;
 
@@ -14,11 +15,10 @@ export default function PrinterPage() {
   const printerName = (params.printerName as string) || 'printi';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [receipts, setReceipts] = useState<ReceiptState[]>([]);
   const [firstPrintiSent, setFirstPrintiSent] = useState(false);
 
-  const PAGEWIDTH = printerName === 'printi' ? 576 : 384;
+  const pageWidth = printerName === 'printi' ? 576 : 384;
 
   // Set manifest link dynamically
   useEffect(() => {
@@ -31,45 +31,6 @@ export default function PrinterPage() {
     manifestLink.href = `/${printerName}/manifest.json`;
   }, [printerName]);
 
-  // Source to DataURI conversion
-  const sourceToDataUri = (source: HTMLImageElement | HTMLVideoElement, width: number, height: number) => {
-    const canvas = document.createElement('canvas');
-    const vert = height > width;
-    const minorlength = vert ? width : height;
-
-    let newWidth = 0;
-    let newHeight = 0;
-
-    if (minorlength <= PAGEWIDTH) {
-      newWidth = width;
-      newHeight = height;
-    } else {
-      const ratio = PAGEWIDTH / minorlength;
-      newWidth = vert ? PAGEWIDTH : ratio * width;
-      newHeight = vert ? ratio * height : PAGEWIDTH;
-    }
-
-    canvas.width = newWidth;
-    canvas.height = newHeight;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(source, 0, 0, newWidth, newHeight);
-    }
-
-    let datayumyum;
-    if (minorlength <= PAGEWIDTH) {
-      datayumyum = canvas.toDataURL('image/png');
-    } else {
-      datayumyum = canvas.toDataURL('image/jpeg', 0.7);
-    }
-
-    const base64data = datayumyum.split(',')[1];
-    return {
-      dataURL: datayumyum,
-      base64data: base64data,
-    };
-  };
-
   const updateReceipt = (id: string, updates: Partial<ReceiptState>) => {
     setReceipts(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
   };
@@ -78,20 +39,25 @@ export default function PrinterPage() {
     setReceipts(prev => prev.filter(r => r.id !== id));
   };
 
-  // Upload image function
-  const uploadImage = useCallback((fileSource: File | null, videoSource: HTMLVideoElement | null) => {
-    const api_server = window.location.origin + '/';
+  const sendAndAnimate = async (id: string, body: BodyInit, headers?: Record<string, string>) => {
+    updateReceipt(id, { wiggling: true, curtainWidth: 0 });
+    await uploadToApi(printerName, body, headers);
+    updateReceipt(id, { bwFilter: true });
 
-    // Add printi name to localStorage
-    const printiFriends = JSON.parse(localStorage.getItem('printiFriends') || '[]');
-    if (!printiFriends.includes(printerName)) {
-      printiFriends.push(printerName);
-      localStorage.setItem('printiFriends', JSON.stringify(printiFriends));
-    }
+    setTimeout(() => {
+      updateReceipt(id, { wiggling: false, printed: true });
+      setTimeout(() => {
+        removeReceipt(id);
+        setFirstPrintiSent(true);
+      }, 2000);
+    }, 1000);
+  };
 
-    // Create receipt in state
+  const uploadImage = useCallback(async (fileSource: File | null, videoSource: HTMLVideoElement | null) => {
+    savePrintiFriend(printerName);
+
     const id = String(nextReceiptId++);
-    const newReceipt: ReceiptState = {
+    setReceipts(prev => [...prev, {
       id,
       previewSrc: null,
       filename: null,
@@ -99,75 +65,29 @@ export default function PrinterPage() {
       wiggling: false,
       bwFilter: false,
       printed: false,
-    };
-    setReceipts(prev => [...prev, newReceipt]);
+    }]);
 
-    const xhr = new XMLHttpRequest();
+    const jsonHeaders = { 'Content-Type': 'application/json; charset=UTF-8' };
 
-    // Progress handler
-    xhr.upload.onprogress = (e) => {
-      const reverseprogress = ((e.total - e.loaded) / e.total) * 100;
-      updateReceipt(id, {
-        curtainWidth: reverseprogress,
-        wiggling: reverseprogress < 5 ? true : undefined,
-      });
-      if (reverseprogress < 5) {
-        updateReceipt(id, { wiggling: true });
-      }
-    };
+    if (videoSource !== null) {
+      const result = sourceToDataUri(videoSource, videoSource.videoWidth, videoSource.videoHeight, pageWidth);
+      updateReceipt(id, { previewSrc: result.dataURL });
+      await sendAndAnimate(id, JSON.stringify({ images: [result.base64data] }), jsonHeaders);
+    } else if (fileSource && fileSource.type.match('image.*')) {
+      const dataUrl = await readFileAsDataURL(fileSource);
+      updateReceipt(id, { previewSrc: dataUrl });
 
-    // Load handler
-    xhr.onload = () => {
-      updateReceipt(id, { curtainWidth: 0, bwFilter: true });
-
-      setTimeout(() => {
-        updateReceipt(id, { wiggling: false, printed: true });
-        setTimeout(() => {
-          removeReceipt(id);
-          setFirstPrintiSent(true);
-        }, 2000);
-      }, 1000);
-    };
-
-    xhr.open('POST', new URL(`api/${printerName}`, api_server).toString(), true);
-
-    const ua = window.navigator.userAgent;
-    const ie = (ua.indexOf('MSIE ') + ua.indexOf('Trident/') + ua.indexOf('Edge/') > -3);
-    const isNotAnImageFile = videoSource === null && fileSource && !fileSource.type.match('image.*');
-    const filereadersupport = 'FileReader' in window;
-
-    if (!ie && !isNotAnImageFile && filereadersupport) {
-      xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-
-      if (videoSource !== null) {
-        const result = sourceToDataUri(videoSource, videoSource.videoWidth, videoSource.videoHeight);
-        updateReceipt(id, { previewSrc: result.dataURL });
-        xhr.send(JSON.stringify({ images: [result.base64data] }));
-      } else if (fileSource) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = e.target?.result as string;
-          updateReceipt(id, { previewSrc: dataUrl });
-
-          const immie = document.createElement('img');
-          immie.onload = () => {
-            const result = sourceToDataUri(immie, immie.width, immie.height);
-            xhr.send(JSON.stringify({ images: [result.base64data] }));
-          };
-          immie.src = dataUrl;
-        };
-        reader.readAsDataURL(fileSource);
-      }
+      const img = await loadImage(dataUrl);
+      const result = sourceToDataUri(img, img.width, img.height, pageWidth);
+      await sendAndAnimate(id, JSON.stringify({ images: [result.base64data] }), jsonHeaders);
     } else if (fileSource) {
       updateReceipt(id, { filename: fileSource.name });
-
       const data = new FormData();
       data.append('file0', fileSource);
-      xhr.send(data);
+      await sendAndAnimate(id, data);
     }
-  }, [printerName, PAGEWIDTH]);
+  }, [printerName, pageWidth]);
 
-  // File picker change handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       for (let i = 0; i < e.target.files.length; i++) {
@@ -177,7 +97,6 @@ export default function PrinterPage() {
     }
   };
 
-  // Handle camera capture from Header
   const handleCapture = (video: HTMLVideoElement) => {
     uploadImage(null, video);
   };
@@ -186,22 +105,15 @@ export default function PrinterPage() {
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData) {
-        const items = e.clipboardData.items;
         const pastedFiles: File[] = [];
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].type.indexOf('image') >= 0) {
-            const blob = items[i].getAsFile();
-            if (blob) {
-              pastedFiles.push(blob);
-            }
+        for (let i = 0; i < e.clipboardData.items.length; i++) {
+          if (e.clipboardData.items[i].type.indexOf('image') >= 0) {
+            const blob = e.clipboardData.items[i].getAsFile();
+            if (blob) pastedFiles.push(blob);
           }
         }
-        for (let i = 0; i < pastedFiles.length; i++) {
-          uploadImage(pastedFiles[i], null);
-        }
-        if (pastedFiles.length > 0) {
-          e.preventDefault();
-        }
+        pastedFiles.forEach(f => uploadImage(f, null));
+        if (pastedFiles.length > 0) e.preventDefault();
       }
     };
 
@@ -211,9 +123,7 @@ export default function PrinterPage() {
         for (let i = 0; i < e.dataTransfer.items.length; i++) {
           if (e.dataTransfer.items[i].kind === 'file') {
             const file = e.dataTransfer.items[i].getAsFile();
-            if (file) {
-              uploadImage(file, null);
-            }
+            if (file) uploadImage(file, null);
           }
         }
       } else if (e.dataTransfer?.files) {
