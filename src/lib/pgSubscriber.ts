@@ -9,7 +9,10 @@ let subscriber: Subscriber | undefined;
 export async function getSubscriber(): Promise<Subscriber> {
   if (!subscriber) {
     console.log("[pgSubscriber] Creating pg-listen subscriber");
-    subscriber = createSubscriber({ connectionString: DATABASE_URL });
+    subscriber = createSubscriber(
+      { connectionString: DATABASE_URL },
+      { parse: (payload) => payload }
+    );
 
     subscriber.events.on("error", (err) => {
       console.error("[pgSubscriber] Fatal error:", err);
