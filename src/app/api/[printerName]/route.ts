@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setupDatabase, insertMessage } from "@/lib/db";
+import { setupDatabase, insertMessage, upsertPrintiSeen } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -11,6 +11,11 @@ export async function POST(
 ) {
   await setupDatabase();
   const { printerName } = await params;
+  const rawDescription = req.headers.get("X-Printi-Description");
+  const description = rawDescription
+    ? Buffer.from(rawDescription, "latin1").toString("utf8")
+    : null;
+  await upsertPrintiSeen(printerName, description);
 
   const contentType = req.headers.get("content-type") ?? "";
 

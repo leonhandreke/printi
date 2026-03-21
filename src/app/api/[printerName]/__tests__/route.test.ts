@@ -1,18 +1,24 @@
 import { POST } from "../route";
 import { NextRequest } from "next/server";
-import { getPool } from "@/lib/db";
+import { getPool, setupDatabase } from "@/lib/db";
 
 describe("/[printerName] POST route", () => {
+  beforeAll(async () => {
+    await setupDatabase();
+  });
+
   beforeEach(async () => {
     // Clean up test data before each test
     const pool = getPool();
     await pool.query("DELETE FROM printi_message WHERE printer_name LIKE 'test%'");
+    await pool.query("DELETE FROM printi_seen WHERE name LIKE 'test%'");
   });
 
   afterAll(async () => {
     // Clean up and close pool after all tests
     const pool = getPool();
     await pool.query("DELETE FROM printi_message WHERE printer_name LIKE 'test%'");
+    await pool.query("DELETE FROM printi_seen WHERE name LIKE 'test%'");
     await pool.end();
   });
 
@@ -113,6 +119,80 @@ describe("/[printerName] POST route", () => {
       ["testmulti"]
     );
     expect(result.rows.length).toBe(2);
+  });
+
+  it("should record printi in printi_seen with description from header", async () => {
+    const request = new NextRequest("http://localhost:3000/api/testseen", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "X-Printi-Description": "My living room printer",
+      },
+      body: JSON.stringify({ images: [] }),
+    });
+
+    const params = Promise.resolve({ printerName: "testseen" });
+    await POST(request, { params });
+
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT name, description FROM printi_seen WHERE name = $1",
+      ["testseen"]
+    );
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0]).toMatchObject({
+      name: "testseen",
+      description: "My living room printer",
+    });
+  });
+
+  it("should record printi_seen with null description when header is absent", async () => {
+    const request = new NextRequest("http://localhost:3000/api/testnodesc", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ images: [] }),
+    });
+
+    const params = Promise.resolve({ printerName: "testnodesc" });
+    await POST(request, { params });
+
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT name, description FROM printi_seen WHERE name = $1",
+      ["testnodesc"]
+    );
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].description).toBeNull();
+  });
+
+  it("should update description in printi_seen on subsequent calls", async () => {
+    const params = Promise.resolve({ printerName: "testupdate" });
+
+    await POST(
+      new NextRequest("http://localhost:3000/api/testupdate", {
+        method: "POST",
+        headers: { "content-type": "application/json", "X-Printi-Description": "Old desc" },
+        body: JSON.stringify({ images: [] }),
+      }),
+      { params }
+    );
+
+    await POST(
+      new NextRequest("http://localhost:3000/api/testupdate", {
+        method: "POST",
+        headers: { "content-type": "application/json", "X-Printi-Description": "New desc" },
+        body: JSON.stringify({ images: [] }),
+      }),
+      { params }
+    );
+
+    const pool = getPool();
+    const result = await pool.query(
+      "SELECT name, description FROM printi_seen WHERE name = $1",
+      ["testupdate"]
+    );
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].description).toBe("New desc");
   });
 
   it("should reject files larger than MAX_SIZE", async () => {

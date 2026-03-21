@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import '../shared.css';
 import './share.css';
 
 export default function SharePage() {

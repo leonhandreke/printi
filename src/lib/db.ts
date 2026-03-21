@@ -15,7 +15,7 @@ export function getPool(): Pool {
 }
 
 /**
- * Create the printi_message table if it does not exist.
+ * Create the printi_message and printi_seen tables if they do not exist.
  * Called once at app startup.
  */
 async function ensureSchema(): Promise<void> {
@@ -31,6 +31,13 @@ async function ensureSchema(): Promise<void> {
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_printi_message_printer_name
     ON printi_message (printer_name);
+  `);
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS printi_seen (
+      name TEXT PRIMARY KEY,
+      description TEXT,
+      last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
 
@@ -109,6 +116,31 @@ export async function queryOldestMessage(
   } finally {
     client.release();
   }
+}
+
+export async function upsertPrintiSeen(
+  name: string,
+  description: string | null
+): Promise<void> {
+  const p = getPool();
+  await p.query(
+    `INSERT INTO printi_seen (name, description, last_seen)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description, last_seen = NOW()`,
+    [name, description]
+  );
+}
+
+export async function getRecentPrintis(): Promise<
+  { name: string; description: string | null; last_seen: Date }[]
+> {
+  const p = getPool();
+  const result = await p.query(
+    `SELECT name, description, last_seen FROM printi_seen
+     WHERE last_seen > NOW() - INTERVAL '2 weeks'
+     ORDER BY last_seen DESC`
+  );
+  return result.rows;
 }
 
 // Run schema setup once when this module is first imported at server startup.

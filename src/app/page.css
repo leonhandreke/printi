@@ -1,0 +1,48 @@
+/* HOME PAGE — PRINTI LIST */
+
+main {
+  max-width: 400px;
+  padding: 24px 16px;
+}
+
+.empty-message {
+  font-family: 'Itim', sans-serif;
+  color: #3a2c1a;
+  opacity: 0.5;
+  margin-top: 40px;
+}
+
+.printi-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0 0;
+  text-align: left;
+}
+
+.printi-item {
+  font-family: 'Itim', sans-serif;
+  font-size: 1.1em;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.printi-item:last-child {
+  border-bottom: none;
+}
+
+.printi-name {
+  font-weight: bold;
+  color: #3a2c1a;
+  text-decoration: none;
+}
+
+.printi-name:hover {
+  text-decoration: underline;
+}
+
+.printi-description {
+  color: #3a2c1a;
+  opacity: 0.45;
+  margin-left: 0.6em;
+  font-size: 0.95em;
+}
