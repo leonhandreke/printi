@@ -4,7 +4,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ printerName: string }> }
 ) {
-  const { printerName } = await params;
+  const { printerName: rawPrinterName } = await params;
+  const printerName = rawPrinterName.toLowerCase();
 
   const manifest = {
     name: `printi ${printerName}`,

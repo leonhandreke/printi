@@ -22,7 +22,8 @@ export async function GET(
   await setupDatabase();
   await initNotificationManager();
 
-  const { printerName } = await params;
+  const { printerName: rawPrinterName } = await params;
+  const printerName = rawPrinterName.toLowerCase();
   const signal = req.signal;
 
   let message = await queryOldestMessage(printerName);

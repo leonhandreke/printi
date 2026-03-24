@@ -10,7 +10,8 @@ export async function POST(
   { params }: { params: Promise<{ printerName: string }> }
 ) {
   await setupDatabase();
-  const { printerName } = await params;
+  const { printerName: rawPrinterName } = await params;
+  const printerName = rawPrinterName.toLowerCase();
   const rawDescription = req.headers.get("X-Printi-Description");
   const description = rawDescription
     ? Buffer.from(rawDescription, "latin1").toString("utf8")

@@ -7,7 +7,7 @@ export function middleware(req: NextRequest) {
   // Rewrite POST /:printername → POST /api/:printername
   // for compatibility with the old fonsp-printi client.
   if (req.method === "POST" && pathParts.length === 1) {
-    url.pathname = `/api/${pathParts[0]}`;
+    url.pathname = `/api/${pathParts[0].toLowerCase()}`;
     return NextResponse.rewrite(url);
   }
 
@@ -18,7 +18,19 @@ export function middleware(req: NextRequest) {
     pathParts.length === 2 &&
     pathParts[0] === "nextinqueue"
   ) {
-    url.pathname = `/api/${pathParts[1]}/nextinqueue`;
+    url.pathname = `/api/${pathParts[1].toLowerCase()}/nextinqueue`;
+    return NextResponse.rewrite(url);
+  }
+
+  // Normalize printer names to lowercase. Redirect GET requests so the URL
+  // bar shows the canonical lowercase URL; rewrite other methods to preserve
+  // the HTTP method (a redirect would turn POST into GET).
+  const lowercasePath = url.pathname.toLowerCase();
+  if (lowercasePath !== url.pathname) {
+    url.pathname = lowercasePath;
+    if (req.method === "GET") {
+      return NextResponse.redirect(url, 301);
+    }
     return NextResponse.rewrite(url);
   }
 
