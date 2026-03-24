@@ -1,5 +1,5 @@
 # ---- Stage 1: Install dependencies ----
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 
 # Build tools + native lib headers needed to compile "canvas" npm package
 RUN apk add --no-cache \
@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # ---- Stage 2: Build the Next.js app ----
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Native lib headers needed because next build imports canvas at build time
 RUN apk add --no-cache \
@@ -23,7 +23,7 @@ COPY . .
 RUN npm run build
 
 # ---- Stage 3: Production runner ----
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Runtime native libraries only (no -dev, no build tools)
 RUN apk add --no-cache \
