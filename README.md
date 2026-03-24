@@ -4,9 +4,9 @@ Visit [printi.me](https://printi.me/)!
 _Use a thermal receipt printer to quickly print from your camera or photo library!_
 
 
-<img src="https://i.imgur.com/fEe6o7N.gif" alt="demonstration screen capture" height="300">
+<img src="public/fEe6o7N.gif" alt="demonstration screen capture" height="300">
 
-![demonstration video](https://i.imgur.com/QBQQcdW.gif)
+![demonstration video](public/QBQQcdW.gif)
 
 The printi project consists of:
 - 🖨 the _printi mini_, a thermal printer that connects to your wifi network, and
@@ -16,7 +16,7 @@ Images sent to printi.me are printed _within a second_ after uploading, making i
 
 Want to build your own printi mini? Check out the [printi-client-esp32](https://github.com/fonsp/printi-client-esp32) repo!
 
-Read more about the project on [the Github wiki](https://github.com/fonsp/printi/wiki). Contact me for any questions! ([Fons](https://github.com/fonsp))
+Read more about the project on [the Github wiki](https://github.com/fonsp/printi/wiki). Contact us for any questions! ([Fons](https://github.com/fonsp) or [Leon](https://github.com/leonhandreke))
 
 ## Developing
 
