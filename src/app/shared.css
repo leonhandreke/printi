@@ -19,6 +19,8 @@ footer {
   font-style: italic;
   margin-top: 400px;
   padding-bottom: 50px;
+  display: flex;
+  gap: 2em;
 }
 
 footer a {

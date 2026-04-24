@@ -13,6 +13,7 @@
   "dependencies": {
     "canvas": "^3.2.1",
     "canvas-dither": "^1.0.1",
+    "marked": "^18.0.2",
     "next": "16.1.6",
     "pg": "^8.20.0",
     "pg-listen": "^1.7.0",

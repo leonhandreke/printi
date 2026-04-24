@@ -172,10 +172,6 @@ export default function PrinterPage() {
         </div>
       </main>
 
-      <footer>
-        <a href="https://github.com/fons-/printi/blob/master/README.md" rel="help">What is printi?</a>
-      </footer>
-
       <InstallPrompt printerName={printerName} firstPrintiSent={firstPrintiSent} />
     </>
   );

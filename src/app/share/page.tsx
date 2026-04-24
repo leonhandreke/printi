@@ -37,10 +37,6 @@ export default function SharePage() {
           </div>
         </div>
       </main>
-
-      <footer>
-        <a href="https://github.com/fons-/printi/blob/master/README.md" rel="help">What is printi?</a>
-      </footer>
     </>
   );
 }

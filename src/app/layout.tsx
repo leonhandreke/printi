@@ -20,7 +20,13 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, user-scalable=no" />
         <link href="https://fonts.googleapis.com/css?family=Courgette|Itim" rel="stylesheet" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer>
+          <a href="https://github.com/fons-/printi/blob/master/README.md" rel="help">What is printi?</a>
+          <a href="/help">Help!</a>
+        </footer>
+      </body>
     </html>
   );
 }
