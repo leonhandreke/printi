@@ -9,7 +9,7 @@ import './help.css';
 const DOCS_DIR = resolve(process.cwd(), 'docs');
 
 function slugToFilename(slug: string[]): string {
-  if (slug.length === 0) return 'README.md';
+  if (slug.length === 0) return 'index.md';
   const name = slug.join('/');
   // first-receipt -> first-receipt.md
   return `${name}.md`;
