@@ -7,29 +7,19 @@ don't panic!
 
 ### Setup
 
-I plugged in my brand new printi mini but nothing is happening!
+How do I **connect my printi to a Wi-Fi network** or **change the printi name**?
 
-> It will take up to **5 minutes** for the printi mini to start. When it does, it will print the printi logo and instructions for setting up Wi-Fi. Hold tight!
-
-How do I **connect my printi to a Wi-Fi network**?
-
-> [Open the settings page of your printi mini](/settings).
+> Plug and unplug the printer 3 times, with around 5 seconds between plug and unplug. Your printi will go into configuration mode and print instructions on how to change settings. Or if you're impatient, go for a [guided tour of the settings page](/settings).
 
 Can I **update** the firmware of my printi mini?
 
 > Yes! The firmware will be updated automatically when the printi _boots_, so restart (switch off/on) your printi every now and then to get the latest features! 
-> 
-> _It could be that your printi mini has **two** power cables: one for the printer and one for the computer. Be sure to restart **both** devices. (Turn the printer on first.)_ 🔌🔌
-
-How do I **change the printi name**?
-
-> [Open the settings page of your printi mini](/settings).
 
 ------
 
 ### Trouble
 
-> In case of trouble, [**try turning your printi off and on**](https://help.printi.me/#setup).
+> In case of trouble, **try turning your printi off and on**.
 
 🚨 What does a **flashing red LED** mean?
 
@@ -41,7 +31,7 @@ My printi only prints blank paper!
 
 My printi is **not receiving pictures**!
 
-> Check that you are sending your pictures to the right address. For example, if your printer name is `apples`, you should go to `printi.me/apples` to send pictures (case sensitive). You can view or change your printer name using the [settings page](/settings). You could also try using another image, someone else's phone or a different printer name.
+> Check that you are sending your pictures to the right address. For example, if your printer name is `apples`, you should go to `printi.me/apples` to send pictures. You can view or change your printer name using the [settings page](/settings). You could also try using another image, someone else's phone or a different printer name.
 
 My printi keeps telling me that it disconnected and connected again. 📜📜
 
@@ -49,11 +39,17 @@ My printi keeps telling me that it disconnected and connected again. 📜📜
 
 My printi doesn't do anything 😢
 
-> Oh no! Remember that it might take up to five minutes for printi to boot and update. Is the [settings page](/settings) working? Feel free to [contact me](https://github.com/fonsp)!
+> Oh no! Is the [settings page](/settings) working? Feel free to reach out to us and we'll help to get your printi working!
 
 ------
 
 ### Misc
+
+How do I **talk to leon and fons**?
+
+> Here: [fons](https://fonsp.com/), [leon](https://ndreke.de)
+> 
+> Tell as all your printi troubles! Or if you don't have any, we also love party invitations and postcards from far away places. Or maybe just drink a cold beverage in the sun and stop worrying about your printi for a while.
 
 Can I protect my printi mini with a **password**?
 
@@ -61,7 +57,7 @@ Can I protect my printi mini with a **password**?
 
 Are images sent to a printi mini **stored on a server**?
 
-> Never on a hard drive; (processed) photos are only stored in memory, and will be deleted when printed, or after 7 days, whichever comes first. 
+> They are stored until there is a printi to print them.
 
 What happens to images sent to `printi.me`?
 
@@ -69,7 +65,7 @@ What happens to images sent to `printi.me`?
 
 Where can I get more **printi minis**?!
 
-> I make more of them sometimes! [Contact me](https://github.com/fonsp) if you are interested. You can also make a printi yourself, instructions can be found on the [printi wiki](https://github.com/fonsp/printi/wiki/).
+> I make more of them sometimes! [Contact us](https://github.com/fonsp) if you are interested. You can also make a printi yourself, instructions can be found at [leonhandreke/printi-client-esp32](https://github.com/leonhandreke/printi-client-esp32), or just talk to Leon or Fons.
 
 Can I use the **USB port** and **ethernet port** at the back of my printi mini?
 
@@ -77,11 +73,12 @@ Can I use the **USB port** and **ethernet port** at the back of my printi mini?
 
 How do I hack my printi mini?
 
-> The SSH server of the embedded Onion Omega 2+ is likely disabled, but you can still change your software by opening your printi mini and taking out the Omega. You can access the terminal over the serial pins (or using the Onion Omega Dock). Please refer to the [client setup instructions](https://github.com/fonsp/printi/wiki/Installing-the-client) to see what commands are run at boot. For example, you could clear the /root/printi directory, and replace it with a clone of _your own fork_ of [the GitHub repository](https://github.com/fonsp/printi). It will then pull the latest version of your fork at boot, instead of the official client.
+> Take a look at [leonhandreke/printi-client-esp32](https://github.com/leonhandreke/printi-client-esp32) --- you'll find all the code there.
 
 I don't want a printi mini anymore!
 
-> Oh no! Bring your printi mini to any electronics store to **dispose of it properly**. If you want, you can open the printi mini (there are four screws, two of which are hidden beneath the rubber pads) and take out the Onion Omega 2+ (and leave the wires). After reassembly, you now have a regular receipt printer and a super cool computer.
+> Oh no! Talk to Leon or Fons instead and we'll find someone who wants it instead!
+
 
 _- [fons](https://github.com/fonsp)_
 
