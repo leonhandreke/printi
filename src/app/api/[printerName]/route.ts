@@ -16,7 +16,6 @@ export async function POST(
   const description = rawDescription
     ? Buffer.from(rawDescription, "latin1").toString("utf8")
     : null;
-  await upsertPrintiSeen(printerName, description);
 
   const contentType = req.headers.get("content-type") ?? "";
 
@@ -47,6 +46,10 @@ export async function POST(
     } else {
       console.warn(`[upload] Unknown content type: ${contentType}`);
     }
+    // Only mark the printi as seen once the upload has been successfully
+    // processed, so malformed POSTs from scanners don't pollute the address
+    // book with names like "_next", "route", etc.
+    await upsertPrintiSeen(printerName, description);
   } catch (err) {
     console.error(`[upload] Error processing upload:`, err);
   }
