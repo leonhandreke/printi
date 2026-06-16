@@ -1,0 +1,6 @@
+include:
+  - docker-compose.yml
+
+services:
+  printi:
+    build: .
