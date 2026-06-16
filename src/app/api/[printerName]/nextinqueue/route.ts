@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { setupDatabase, queryOldestMessage } from "@/lib/db";
+import { setupDatabase, queryOldestMessage, upsertPrintiSeen } from "@/lib/db";
 import {
   initNotificationManager,
   waitForNotification,
@@ -25,6 +25,8 @@ export async function GET(
   const { printerName: rawPrinterName } = await params;
   const printerName = rawPrinterName.toLowerCase();
   const signal = req.signal;
+
+  await upsertPrintiSeen(printerName, null);
 
   let message = await queryOldestMessage(printerName);
 

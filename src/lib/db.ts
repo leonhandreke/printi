@@ -124,9 +124,13 @@ export async function upsertPrintiSeen(
 ): Promise<void> {
   const p = getPool();
   await p.query(
+    // COALESCE so callers without a description (e.g. printer GET polls) don't
+    // wipe out a description previously set by an uploader.
     `INSERT INTO printi_seen (name, description, last_seen)
      VALUES ($1, $2, NOW())
-     ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description, last_seen = NOW()`,
+     ON CONFLICT (name) DO UPDATE SET
+       description = COALESCE(EXCLUDED.description, printi_seen.description),
+       last_seen = NOW()`,
     [name, description]
   );
 }
