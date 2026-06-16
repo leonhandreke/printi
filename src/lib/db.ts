@@ -144,7 +144,9 @@ export async function getRecentPrintis(): Promise<
 }
 
 // Run schema setup once when this module is first imported at server startup.
-// Use a cached promise so it only runs once.
+// Cache the in-flight/resolved promise so concurrent callers share one run,
+// but clear it on failure so the next request retries (e.g. after postgres
+// finishes its first-boot init).
 let _setupPromise: Promise<void> | undefined;
 export function setupDatabase(): Promise<void> {
   if (!_setupPromise) {
@@ -152,7 +154,10 @@ export function setupDatabase(): Promise<void> {
       await ensureSchema();
       await ensureNotifyTrigger();
       console.log("[db] Schema and triggers ready");
-    })();
+    })().catch((err) => {
+      _setupPromise = undefined;
+      throw err;
+    });
   }
   return _setupPromise;
 }
