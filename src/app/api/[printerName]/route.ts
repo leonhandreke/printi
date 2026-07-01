@@ -47,9 +47,12 @@ export async function POST(
       console.warn(`[upload] Unknown content type: ${contentType}`);
     }
     // Only mark the printi as seen once the upload has been successfully
-    // processed, so malformed POSTs from scanners don't pollute the address
-    // book with names like "_next", "route", etc.
-    await upsertPrintiSeen(printerName, description);
+    // processed and the request identifies itself with a description header,
+    // so malformed POSTs from scanners don't pollute the address book with
+    // names like "_next", "route", etc.
+    if (description !== null) {
+      await upsertPrintiSeen(printerName, description);
+    }
   } catch (err) {
     console.error(`[upload] Error processing upload:`, err);
   }

@@ -146,7 +146,7 @@ describe("/[printerName] POST route", () => {
     });
   });
 
-  it("should record printi_seen with null description when header is absent", async () => {
+  it("should not record printi_seen when description header is absent", async () => {
     const request = new NextRequest("http://localhost:3000/api/testnodesc", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -161,8 +161,7 @@ describe("/[printerName] POST route", () => {
       "SELECT name, description FROM printi_seen WHERE name = $1",
       ["testnodesc"]
     );
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].description).toBeNull();
+    expect(result.rows.length).toBe(0);
   });
 
   it("should update description in printi_seen on subsequent calls", async () => {

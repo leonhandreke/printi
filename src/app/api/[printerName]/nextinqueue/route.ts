@@ -26,7 +26,13 @@ export async function GET(
   const printerName = rawPrinterName.toLowerCase();
   const signal = req.signal;
 
-  await upsertPrintiSeen(printerName, null);
+  // Only add the printi to the address book if it identifies itself with a
+  // description header, so plain pollers/scanners don't pollute it.
+  const rawDescription = req.headers.get("X-Printi-Description");
+  if (rawDescription !== null) {
+    const description = Buffer.from(rawDescription, "latin1").toString("utf8");
+    await upsertPrintiSeen(printerName, description);
+  }
 
   let message = await queryOldestMessage(printerName);
 
